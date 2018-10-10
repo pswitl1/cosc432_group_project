@@ -24,12 +24,12 @@ def main():
     args = parser.parse_args()
 
     # set up classifier
-    classifier = Classifier(input_file=args.input, \
-                            synapse_file=args.synapse_file, \
-                            hidden_neurons=args.hidden_neurons, \
-                            alpha=args.alpha, \
-                            epochs=args.epoch, \
-                            dropout=args.dropout, \
+    classifier = Classifier(input_file=args.input,
+                            synapse_file=args.synapse_file,
+                            hidden_neurons=args.hidden_neurons,
+                            alpha=args.alpha,
+                            epochs=args.epoch,
+                            dropout=args.dropout,
                             dropout_percent=args.dropout_percent)
 
     # try to classify some test sentences
@@ -39,6 +39,7 @@ def main():
     classifier.classify("The application must run fast and smoothly")
     classifier.classify("The users information must be linked to an emergency contact")
     classifier.classify("The application should be designed with code readability in mind")
+
 
 if __name__ == '__main__':
     main()

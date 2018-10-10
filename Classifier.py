@@ -8,7 +8,7 @@ import numpy as np
 from nltk.stem.lancaster import LancasterStemmer
 
 
-class Classifier():
+class Classifier:
     """
     class Classifier
     takes training data input and allows user to call classify on new sentences
@@ -18,7 +18,8 @@ class Classifier():
     ERROR_THRESHOLD = 0.2
     stemmer = LancasterStemmer()
 
-    def __init__(self, input_file, synapse_file, hidden_neurons=10, alpha=1, epochs=50000, dropout=False, dropout_percent=0.5):
+    def __init__(self, input_file, synapse_file, hidden_neurons=10, alpha=1, epochs=50000, dropout=False,
+                 dropout_percent=0.5):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -61,7 +62,11 @@ class Classifier():
 
         # train and time training
         start_time = time.time()
-        self.train(hidden_neurons=hidden_neurons, alpha=alpha, epochs=epochs, dropout=dropout, dropout_percent=dropout)
+        self.train(hidden_neurons=hidden_neurons,
+                   alpha=alpha,
+                   epochs=epochs,
+                   dropout=dropout,
+                   dropout_percent=dropout_percent)
         elapsed_time = time.time() - start_time
         print("processing time: %s seconds" % elapsed_time)
 
@@ -225,9 +230,9 @@ class Classifier():
 
         results = self.think(sentence, show_details)
 
-        results = [[i,r] for i,r in enumerate(results) if r > Classifier.ERROR_THRESHOLD]
+        results = [[i, r] for i, r in enumerate(results) if r > Classifier.ERROR_THRESHOLD]
         results.sort(key=lambda x: x[1], reverse=True)
-        return_results =[[self.classes[r[0]],r[1]] for r in results]
+        return_results = [[self.classes[r[0]], r[1]] for r in results]
         print ("%s \n classification: %s" % (sentence, return_results))
         return return_results
 
