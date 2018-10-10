@@ -18,7 +18,7 @@ class Classifier():
     ERROR_THRESHOLD = 0.2
     stemmer = LancasterStemmer()
 
-    def __init__(self, input_file, synapse_file):
+    def __init__(self, input_file, synapse_file, hidden_neurons=10, alpha=1, epochs=50000, dropout=False, dropout_percent=0.5):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -61,7 +61,7 @@ class Classifier():
 
         # train and time training
         start_time = time.time()
-        self.train(hidden_neurons=5, alpha=0.1, epochs=1000, dropout=False, dropout_percent=0.2)
+        self.train(hidden_neurons=hidden_neurons, alpha=alpha, epochs=epochs, dropout=dropout, dropout_percent=dropout)
         elapsed_time = time.time() - start_time
         print("processing time: %s seconds" % elapsed_time)
 

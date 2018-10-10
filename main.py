@@ -15,10 +15,22 @@ def main():
     parser.add_argument('--synapse-file', '-s', help='input file containing training data', required=False, type=str,\
                         default='synapses.json')
     parser.add_argument('--quiet', '-q', help='surpress logging', action='store_true')
+    parser.add_argument('--hidden-neurons', help='number of hidden neurons in training', type=int, default=10)
+    parser.add_argument('--alpha', help='alpha in training', type=int, default=1)
+    parser.add_argument('--epoch', help='number of epochs in training', type=int, default=50000)
+    parser.add_argument('--dropout', help='dropout boolean for training', action='store_true')
+    parser.add_argument('--dropout-percent', help='dropout boolean for training', type=float, default=0.5)
+
     args = parser.parse_args()
 
     # set up classifier
-    classifier = Classifier(args.input, args.synapse_file)
+    classifier = Classifier(input_file=args.input, \
+                            synapse_file=args.synapse_file, \
+                            hidden_neurons=args.hidden_neurons, \
+                            alpha=args.alpha, \
+                            epochs=args.epoch, \
+                            dropout=args.dropout, \
+                            dropout_percent=args.dropout_percent)
 
     # try to classify some test sentences
     classifier.classify("Users information must be kept private")
