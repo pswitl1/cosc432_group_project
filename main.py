@@ -16,7 +16,7 @@ def main():
                         default='synapses.json')
     parser.add_argument('--quiet', '-q', help='surpress logging', action='store_true')
     parser.add_argument('--hidden-neurons', help='number of hidden neurons in training', type=int, default=10)
-    parser.add_argument('--alpha', help='alpha in training', type=int, default=1)
+    parser.add_argument('--alpha', help='alpha in training', type=float, default=1)
     parser.add_argument('--epoch', help='number of epochs in training', type=int, default=50000)
     parser.add_argument('--dropout', help='dropout boolean for training', action='store_true')
     parser.add_argument('--dropout-percent', help='dropout boolean for training', type=float, default=0.5)
