@@ -15,7 +15,7 @@ class Classifier:
     """
 
     # static variables
-    ERROR_THRESHOLD = 0.2
+    ERROR_THRESHOLD = 0.5
     stemmer = LancasterStemmer()
 
     def __init__(self, input_file, synapse_file, hidden_neurons=10, alpha=1, epochs=50000, dropout=False,
@@ -164,7 +164,7 @@ class Classifier:
         synapse_1_direction_count = np.zeros_like(synapse_1)
 
         for j in iter(range(epochs + 1)):
-
+            print('epoch: %i' % j)
             # Feed forward through layers 0, 1, and 2
             layer_0 = x
             layer_1 = Classifier.sigmoid(np.dot(layer_0, synapse_0))
@@ -237,7 +237,7 @@ class Classifier:
         return return_results
 
     def think(self, sentence, show_details=False):
-        x = self.bow(sentence.lower(), self.words, show_details)
+        x = self.bow(sentence.lower(), show_details)
         if show_details:
             print("sentence:", sentence, "\n bow:", x)
         # input layer is our bag of words
@@ -249,18 +249,17 @@ class Classifier:
         return l2
 
     # return bag of words array: 0 or 1 for each word in the bag that exists in the sentence
-    def bow(self, sentence, words, show_details=False):
+    def bow(self, sentence, show_details=False):
         # tokenize the pattern
         sentence_words = self.clean_up_sentence(sentence)
         # bag of words
-        bag = [0] * len(words)
+        bag = [0] * len(self.words)
         for s in sentence_words:
-            for i, w in enumerate(words):
+            for i, w in enumerate(self.words):
                 if w == s:
                     bag[i] = 1
                     if show_details:
                         print("found in bag: %s" % w)
-
         return np.array(bag)
 
     @staticmethod

@@ -33,12 +33,13 @@ def main():
                             dropout_percent=args.dropout_percent)
 
     # try to classify some test sentences
-    classifier.classify("Users information must be kept private")
-    classifier.classify("The Application should have a modern look")
-    classifier.classify("The Application should have circular buttons")
-    classifier.classify("The application must run fast and smoothly")
-    classifier.classify("The users information must be linked to an emergency contact")
-    classifier.classify("The application should be designed with code readability in mind")
+    classifier.classify("Users information must be kept private.", show_details=True)
+    classifier.classify("The Application should have a modern look.")
+    classifier.classify("The Application should have circular buttons.", show_details=True)
+    classifier.classify("The application must run fast and smoothly.")
+    classifier.classify("The users information must be linked to an emergency contact.")
+    classifier.classify(
+        "This will present you with a list of all of the contacts currently contained in your Address Book.", show_details=True)
 
 
 if __name__ == '__main__':
