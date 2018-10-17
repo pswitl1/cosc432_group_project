@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import nltk
+nltk.download('punkt')
 import time
 import datetime
 import numpy as np
