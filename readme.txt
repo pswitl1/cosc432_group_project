@@ -1,7 +1,3 @@
-To build docker image:
+source env/bin/activate
 
-	docker build -t classify .
-
-To run:
-
-	docker run classify
+./main.py training_data_input_file.txt
