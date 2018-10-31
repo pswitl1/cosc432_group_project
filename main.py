@@ -12,8 +12,8 @@ def main():
     # parse arguments
     parser = ArgumentParser('driver for the Classifier class')
     parser.add_argument('input', help='input file containing training data', type=str)
-    parser.add_argument('--synapse-file', '-s', help='input file containing training data', required=False, type=str,\
-                        default='synapses.json')
+    parser.add_argument('--synapse-file', '-s', help='input file containing training data (this will skip training)', required=False, type=str,\
+                        default='')
     parser.add_argument('--quiet', '-q', help='surpress logging', action='store_true')
     parser.add_argument('--hidden-neurons', help='number of hidden neurons in training', type=int, default=10)
     parser.add_argument('--alpha', help='alpha in training', type=float, default=1)
@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--dropout-percent', help='dropout boolean for training', type=float, default=0.5)
 
     args = parser.parse_args()
+#train(X, y, hidden_neurons=20, alpha=0.1, epochs=100000, dropout=False, dropout_percent=0.2)
 
     # set up classifier
     classifier = Classifier(input_file=args.input,
@@ -33,13 +34,12 @@ def main():
                             dropout_percent=args.dropout_percent)
 
     # try to classify some test sentences
-    classifier.classify("Users information must be kept private.", show_details=True)
+    classifier.classify("Users information must be kept private.")
     classifier.classify("The Application should have a modern look.")
-    classifier.classify("The Application should have circular buttons.", show_details=True)
+    classifier.classify("The Application should have circular buttons.")
     classifier.classify("The application must run fast and smoothly.")
     classifier.classify("The users information must be linked to an emergency contact.")
-    classifier.classify(
-        "This will present you with a list of all of the contacts currently contained in your Address Book.", show_details=True)
+    classifier.classify("This will present you with a list of all of the contacts currently contained in your Address Book.")
 
 
 if __name__ == '__main__':

@@ -61,14 +61,15 @@ class Classifier:
         print('first training output: %s' % self.output[0])
 
         # train and time training
-        start_time = time.time()
-        self.train(hidden_neurons=hidden_neurons,
-                   alpha=alpha,
-                   epochs=epochs,
-                   dropout=dropout,
-                   dropout_percent=dropout_percent)
-        elapsed_time = time.time() - start_time
-        print("processing time: %s seconds" % elapsed_time)
+        if synapse_file == '':
+            start_time = time.time()
+            self.train(hidden_neurons=hidden_neurons,
+                       alpha=alpha,
+                       epochs=epochs,
+                       dropout=dropout,
+                       dropout_percent=dropout_percent)
+            elapsed_time = time.time() - start_time
+            print("processing time: %s seconds" % elapsed_time)
 
         # load our calculated synapse values
         with open(self.synapse_file) as data_file:
@@ -84,7 +85,11 @@ class Classifier:
         with open(input_file, 'r') as fin:
             for line in fin.readlines():
                 line = line[line.index('{'):line.rindex('}')+1]
-                self.training_data.append(json.loads(line))
+                training = json.loads(line)
+                if not training['class'] == 'database design':
+                    if not training['class'] == 'functional':
+                        training['class'] = 'nonfunctional'
+                    self.training_data.append(training)
 
     def set_words_classes_documents(self):
         """
@@ -135,7 +140,7 @@ class Classifier:
             output_row[self.classes.index(doc[1])] = 1
             self.output.append(output_row)
 
-    def train(self, hidden_neurons=10, alpha=1, epochs=50000, dropout=False, dropout_percent=0.5):
+    def train(self, hidden_neurons, alpha, epochs, dropout, dropout_percent):
         """
         train the neural net based on training data and save to self.synapse_file
         :param hidden_neurons: number of hidden neurons
@@ -164,7 +169,6 @@ class Classifier:
         synapse_1_direction_count = np.zeros_like(synapse_1)
 
         for j in iter(range(epochs + 1)):
-            print('epoch: %i' % j)
             # Feed forward through layers 0, 1, and 2
             layer_0 = x
             layer_1 = Classifier.sigmoid(np.dot(layer_0, synapse_0))
@@ -177,7 +181,8 @@ class Classifier:
 
             # how much did we miss the target value?
             layer_2_error = y - layer_2
-
+            if (j % 10 == 0):
+                print("delta after " + str(j) + " iterations:" + str(np.mean(np.abs(layer_2_error))))
             if (j % 10000) == 0 and j > 5000:
                 # if this 10k iteration's error is greater than the last iteration, break out
                 if np.mean(np.abs(layer_2_error)) < last_mean_error:
@@ -221,7 +226,8 @@ class Classifier:
                    'words': self.words,
                    'classes': self.classes
                    }
-
+        if self.synapse_file == '':
+            self.synapse_file = 'synapses.json'
         with open(self.synapse_file, 'w') as fout:
             json.dump(synapse, fout, indent=4, sort_keys=True)
         print("saved synapses to:", self.synapse_file)
