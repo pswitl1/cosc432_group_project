@@ -2,10 +2,17 @@ import os
 import sys
 import json
 import nltk
+nltk.download('punkt')
 import time
 import datetime
 import numpy as np
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
+
+
+
+
 
 
 class Classifier:
@@ -96,6 +103,7 @@ class Classifier:
         from training data, create words, classes, and documents
         """
         ignore_words = ['?']
+
         # loop through each sentence in our training data
         for pattern in self.training_data:
             # tokenize each word in the sentence
@@ -128,6 +136,19 @@ class Classifier:
             bag = []
             # list of tokenized words for the pattern
             pattern_words = doc[0]
+
+            # remove stop words
+            stop_words = set(stopwords.words('english'))
+            filtered_sentence = []
+
+            for w in pattern_words:
+                if w not in stop_words:
+                    filtered_sentence.append(w)
+
+            
+
+
+
             # stem each word
             pattern_words = [Classifier.stemmer.stem(word.lower()) for word in pattern_words]
             # create our bag of words array
@@ -139,6 +160,10 @@ class Classifier:
             output_row = list(output_empty)
             output_row[self.classes.index(doc[1])] = 1
             self.output.append(output_row)
+
+
+        print (pattern_words)
+        print (filtered_sentence)
 
     def train(self, hidden_neurons, alpha, epochs, dropout, dropout_percent):
         """
