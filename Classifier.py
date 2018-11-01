@@ -145,9 +145,8 @@ class Classifier:
                 if w not in stop_words:
                     filtered_sentence.append(w)
 
-            
-
-
+            print ("Original: %s" % pattern_words)
+            print ("Filtered: %s" % filtered_sentence)
 
             # stem each word
             pattern_words = [Classifier.stemmer.stem(word.lower()) for word in pattern_words]
@@ -162,8 +161,7 @@ class Classifier:
             self.output.append(output_row)
 
 
-        print (pattern_words)
-        print (filtered_sentence)
+
 
     def train(self, hidden_neurons, alpha, epochs, dropout, dropout_percent):
         """
