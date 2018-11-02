@@ -130,6 +130,16 @@ class Classifier:
         # create an empty array for our output
         output_empty = [0] * len(self.classes)
 
+        #create array for stop words
+        stop_words = stopwords.words('english')
+        custom_stop_words = ['dog', 'cat']
+        stop_words.extend(custom_stop_words)
+        #stop_words.append('system')
+        filtered_sentence = []
+        print("Stop Words: %s" % stop_words)
+        #print ("Original: %s" % pattern_words)
+        #print ("Filtered: %s" % filtered_sentence)
+
         # training set, bag of words for each sentence
         for doc in self.documents:
             # initialize our bag of words
@@ -138,15 +148,9 @@ class Classifier:
             pattern_words = doc[0]
 
             # remove stop words
-            stop_words = set(stopwords.words('english'))
-            filtered_sentence = []
-
             for w in pattern_words:
                 if w not in stop_words:
                     filtered_sentence.append(w)
-
-            print ("Original: %s" % pattern_words)
-            print ("Filtered: %s" % filtered_sentence)
 
             # stem each word
             pattern_words = [Classifier.stemmer.stem(word.lower()) for word in pattern_words]
