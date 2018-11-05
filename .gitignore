@@ -105,3 +105,6 @@ celerybeat-schedule
 
 # ignore synapses
 synapses.json
+
+#ignore idea
+.idea*
