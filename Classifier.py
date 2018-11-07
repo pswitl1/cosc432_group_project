@@ -1,18 +1,17 @@
 import os
 import sys
 import json
-import nltk
-nltk.download('punkt')
 import time
 import datetime
 import numpy as np
+
+# neural net library
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
-
-
-
-
 
 
 class Classifier:
@@ -23,10 +22,15 @@ class Classifier:
 
     # static variables
     ERROR_THRESHOLD = 0.5
-    stemmer = LancasterStemmer()
+    STEMMER = LancasterStemmer()
 
-    def __init__(self, input_file, synapse_file, hidden_neurons=10, alpha=1, epochs=50000, dropout=False,
-                 dropout_percent=0.5):
+    # add more stop words
+    STOP_WORDS = stopwords.words('english')
+    CUSTOM_STOP_WORDS = ['the', 'system', 'shall', 'product', 'interface', 'note', 'provides', 'has', 'capability',
+        'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are']
+    STOP_WORDS.extend(CUSTOM_STOP_WORDS)
+
+    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -37,6 +41,7 @@ class Classifier:
         self.classes = []
         self.documents = []
         self.training_data = []
+        self.test_data = []
         self.training = []
         self.output = []
         self.synapse_file = synapse_file
@@ -52,20 +57,20 @@ class Classifier:
 
         # parse input
         self.parse_input_file(input_file)
-        print('%s sentences in training data' % len(self.training_data))
+        print('%s sentences in training data\n' % len(self.training_data))
 
         # set words classes and documents
         self.set_words_classes_documents()
-        print('%i documents' % len(self.documents))
-        print('%i classes: %s' % (len(self.classes), self.classes))
-        print('%i unique stemmed words: %s' % (len(self.words), self.words))
+        print('%i documents\n' % len(self.documents))
+        print('%i classes: %s\n' % (len(self.classes), self.classes))
+        print('%i unique stemmed words: %s\n' % (len(self.words), self.words))
 
         # set training and output
         self.create_training_data()
         print('first documents words:')
-        print([Classifier.stemmer.stem(word.lower()) for word in self.documents[0][0]])
-        print('first training data: %s' % self.training[0])
-        print('first training output: %s' % self.output[0])
+        print([Classifier.STEMMER.stem(word.lower()) for word in self.documents[0][0]])
+        print('\nfirst training data: %s\n' % self.training[0])
+        print('first training output: %s\n' % self.output[0])
 
         # train and time training
         if synapse_file == '':
@@ -84,25 +89,32 @@ class Classifier:
             self.synapse_0 = np.asarray(synapse['synapse0'])
             self.synapse_1 = np.asarray(synapse['synapse1'])
 
+        self.classify_test_data()
+
     def parse_input_file(self, input_file):
         """
         parse the training data input file to set training data
         :param input_file: training data input file
         """
         with open(input_file, 'r') as fin:
+            i = 1
             for line in fin.readlines():
                 line = line[line.index('{'):line.rindex('}')+1]
                 training = json.loads(line)
                 if not training['class'] == 'database design':
+
                     if not training['class'] == 'functional':
                         training['class'] = 'nonfunctional'
-                    self.training_data.append(training)
+                    if not i % 10 == 0:
+                        self.training_data.append(training)
+                    else:
+                        self.test_data.append(training)
+                    i += 1
 
     def set_words_classes_documents(self):
         """
         from training data, create words, classes, and documents
         """
-        ignore_words = ['?']
 
         # loop through each sentence in our training data
         for pattern in self.training_data:
@@ -116,12 +128,13 @@ class Classifier:
             if pattern['class'] not in self.classes:
                 self.classes.append(pattern['class'])
 
-        # stem and lower each word and remove duplicates
-        self.words = [Classifier.stemmer.stem(w.lower()) for w in self.words if w not in ignore_words]
+        # remove stop words, stem and lower each word and remove duplicates
+        self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in Classifier.STOP_WORDS]
         self.words = list(set(self.words))
 
         # remove duplicates
         self.classes = list(set(self.classes))
+
 
     def create_training_data(self):
         """
@@ -130,15 +143,7 @@ class Classifier:
         # create an empty array for our output
         output_empty = [0] * len(self.classes)
 
-        #create array for stop words
-        stop_words = stopwords.words('english')
-        custom_stop_words = ['dog', 'cat']
-        stop_words.extend(custom_stop_words)
-        #stop_words.append('system')
-        filtered_sentence = []
-        print("Stop Words: %s" % stop_words)
-        #print ("Original: %s" % pattern_words)
-        #print ("Filtered: %s" % filtered_sentence)
+
 
         # training set, bag of words for each sentence
         for doc in self.documents:
@@ -147,13 +152,9 @@ class Classifier:
             # list of tokenized words for the pattern
             pattern_words = doc[0]
 
-            # remove stop words
-            for w in pattern_words:
-                if w not in stop_words:
-                    filtered_sentence.append(w)
-
             # stem each word
-            pattern_words = [Classifier.stemmer.stem(word.lower()) for word in pattern_words]
+            pattern_words = [Classifier.STEMMER.stem(w.lower()) for w in pattern_words if w not in Classifier.STOP_WORDS]
+
             # create our bag of words array
             for w in self.words:
                 bag.append(1) if w in pattern_words else bag.append(0)
@@ -201,7 +202,7 @@ class Classifier:
             layer_1 = Classifier.sigmoid(np.dot(layer_0, synapse_0))
 
             if dropout:
-                layer_1 *= np.random.binomial([np.ones((len(x), hidden_neurons))], 1 - dropout_percent)[0] * (
+                layer_1 *= np.random.binomial([np.ones((len(x), hidden_neurons))], 1 - dropout_percent)[0]* (
                         1.0 / (1 - dropout_percent))
 
             layer_2 = Classifier.sigmoid(np.dot(layer_1, synapse_1))
@@ -266,7 +267,7 @@ class Classifier:
         results = [[i, r] for i, r in enumerate(results) if r > Classifier.ERROR_THRESHOLD]
         results.sort(key=lambda x: x[1], reverse=True)
         return_results = [[self.classes[r[0]], r[1]] for r in results]
-        print ("%s \n classification: %s" % (sentence, return_results))
+        #print ("%s \n classification: %s" % (sentence, return_results))
         return return_results
 
     def think(self, sentence, show_details=False):
@@ -295,6 +296,23 @@ class Classifier:
                         print("found in bag: %s" % w)
         return np.array(bag)
 
+    def classify_test_data(self):
+        """
+        classify the test data
+        """
+        number_correct = 0
+        for idx, test in enumerate(self.test_data):
+            results = self.classify(test['sentence'])
+            correct = results[0][0] == test['class']
+            print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
+            if correct:
+                number_correct += 1
+
+        percent_correct = (number_correct / len(self.test_data)) * 100
+
+        print('Out of %i tests, %i passed. %f percent of tests passed' % (len(self.test_data), number_correct, percent_correct))
+
+
     @staticmethod
     def clean_up_sentence(sentence):
         """
@@ -302,11 +320,11 @@ class Classifier:
         :param sentence: input sentence
         :return: cleaned up sentence
         """
-        Classifier.stemmer = LancasterStemmer()
+
         # tokenize the pattern
         sentence_words = nltk.word_tokenize(sentence)
         # stem each word
-        sentence_words = [Classifier.stemmer.stem(word.lower()) for word in sentence_words]
+        sentence_words = [Classifier.STEMMER.stem(word.lower()) for word in sentence_words]
         return sentence_words
 
     @staticmethod
