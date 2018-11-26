@@ -1,0 +1,46 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#bodyShow{
+  width: 75%;
+  height: auto;
+}
+a {
+  color: #00B7FF;
+  text-decoration: none;
+}
+
+h1{
+  text-align:center;
+  text-transform: uppercase;
+  font-family: 'Roboto', sans-serif;
+  font-size: 40px;
+}
+
+h2{
+  text-align:center;
+  font-family: 'Roboto', sans-serif;
+  font-size: 20px;
+}
+
+.container{
+width: 75%;
+height: 500px;
+border: 2px solid black;
+border-radius: 10px;
+margin: 0 auto;
+overflow: scroll;
+}
+
+button{
+  display: block;
+  text-align: center;
+  margin: 0 auto;
+  padding: 40px;
+  margin-top: 75px;
+  border-radius: 10px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 20px;
+}

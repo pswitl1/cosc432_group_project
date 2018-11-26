@@ -30,7 +30,14 @@ class Classifier:
         'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are']
     STOP_WORDS.extend(CUSTOM_STOP_WORDS)
 
-    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, disable_stopwords):
+
+
+
+
+
+
+
+    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -45,10 +52,6 @@ class Classifier:
         self.training = []
         self.output = []
         self.synapse_file = synapse_file
-        if disable_stopwords:
-            self.stopwords = []
-        else:
-            self.stopwords = Classifier.STOP_WORDS
 
         # verify input file is valid
         if os.path.exists(input_file):
@@ -77,14 +80,15 @@ class Classifier:
         print('first training output: %s\n' % self.output[0])
 
         # train and time training
-        start_time = time.time()
-        self.train(hidden_neurons=hidden_neurons,
-                   alpha=alpha,
-                   epochs=epochs,
-                   dropout=dropout,
-                   dropout_percent=dropout_percent)
-        elapsed_time = time.time() - start_time
-        print("processing time: %s seconds" % elapsed_time)
+        if synapse_file == '':
+            start_time = time.time()
+            self.train(hidden_neurons=hidden_neurons,
+                       alpha=alpha,
+                       epochs=epochs,
+                       dropout=dropout,
+                       dropout_percent=dropout_percent)
+            elapsed_time = time.time() - start_time
+            print("processing time: %s seconds" % elapsed_time)
 
         # load our calculated synapse values
         with open(self.synapse_file) as data_file:
@@ -132,7 +136,7 @@ class Classifier:
                 self.classes.append(pattern['class'])
 
         # remove stop words, stem and lower each word and remove duplicates
-        self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in self.stopwords]
+        self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in Classifier.STOP_WORDS]
         self.words = list(set(self.words))
 
         # remove duplicates
@@ -156,7 +160,7 @@ class Classifier:
             pattern_words = doc[0]
 
             # stem each word
-            pattern_words = [Classifier.STEMMER.stem(w.lower()) for w in pattern_words if w not in self.stopwords]
+            pattern_words = [Classifier.STEMMER.stem(w.lower()) for w in pattern_words if w not in Classifier.STOP_WORDS]
 
             # create our bag of words array
             for w in self.words:
@@ -304,25 +308,17 @@ class Classifier:
         classify the test data
         """
         number_correct = 0
-        couldnt_classify = 0
         for idx, test in enumerate(self.test_data):
             results = self.classify(test['sentence'])
-            if not results == []:
-                correct = results[0][0] == test['class']
-                print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
-                if correct:
-                    number_correct += 1
-            else:
-                print('Test %i result: Could not classify' % idx)
-                couldnt_classify += 1
-
-
+            correct = results[0][0] == test['class']
+            print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
+            if correct:
+                number_correct += 1
 
         percent_correct = (number_correct / len(self.test_data)) * 100
 
         print('Out of %i tests, %i passed. %f percent of tests passed' % (len(self.test_data), number_correct, percent_correct))
-        if couldnt_classify > 0:
-            print('Couldnt classify %i tests' % couldnt_classify)
+
 
     @staticmethod
     def clean_up_sentence(sentence):
