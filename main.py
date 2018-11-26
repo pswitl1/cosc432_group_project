@@ -24,9 +24,7 @@ def main():
     parser.add_argument('--cp2', help='run classifier for cp2, which classifies based on all classes', action='store_true')
     parser.add_argument('--use-db-class', help='include database sentences', action='store_true')
 
-
     args = parser.parse_args()
-#train(X, y, hidden_neurons=20, alpha=0.1, epochs=100000, dropout=False, dropout_percent=0.2)
 
     # set up classifier
     classifier = Classifier(input_file=args.input,
@@ -43,7 +41,6 @@ def main():
     percent_correct = classifier.classify_test_data()
 
     return percent_correct
-
 
 if __name__ == '__main__':
     main()
