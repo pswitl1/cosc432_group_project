@@ -319,12 +319,17 @@ class Classifier:
         classify the test data
         """
         number_correct = 0
+        couldnt_classify = 0
         for idx, test in enumerate(self.test_data):
             results = self.classify(test['sentence'])
-            correct = results[0][0] == test['class']
-            print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
-            if correct:
-                number_correct += 1
+            if results == []:
+                couldnt_classify += 1
+                print('Test %i result: Couldnt classify.' % idx)
+            else:
+                correct = results[0][0] == test['class']
+                print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
+                if correct:
+                    number_correct += 1
 
         percent_correct = (number_correct / len(self.test_data)) * 100
 
