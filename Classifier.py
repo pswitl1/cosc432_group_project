@@ -30,7 +30,7 @@ class Classifier:
         'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are']
     STOP_WORDS.extend(CUSTOM_STOP_WORDS)
 
-    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, disable_stopwords):
+    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, disable_stopwords, cp2, use_db_class):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -50,6 +50,9 @@ class Classifier:
         else:
             self.stopwords = Classifier.STOP_WORDS
 
+        # stem stopwords
+        self.stopwords = [Classifier.STEMMER.stem(w.lower()) for w in self.stopwords]
+
         # verify input file is valid
         if os.path.exists(input_file):
             if os.path.isdir(input_file):
@@ -60,7 +63,7 @@ class Classifier:
             print('input file: %s does not exist' % input_file)
 
         # parse input
-        self.parse_input_file(input_file)
+        self.parse_input_file(input_file, cp2, use_db_class)
         print('%s sentences in training data\n' % len(self.training_data))
 
         # set words classes and documents
@@ -92,9 +95,7 @@ class Classifier:
             self.synapse_0 = np.asarray(synapse['synapse0'])
             self.synapse_1 = np.asarray(synapse['synapse1'])
 
-        self.classify_test_data()
-
-    def parse_input_file(self, input_file):
+    def parse_input_file(self, input_file, cp2, use_db_class):
         """
         parse the training data input file to set training data
         :param input_file: training data input file
@@ -104,9 +105,9 @@ class Classifier:
             for line in fin.readlines():
                 line = line[line.index('{'):line.rindex('}')+1]
                 training = json.loads(line)
-                if not training['class'] == 'database design':
+                if not (training['class'] == 'database design' or training['class'] == 'database') or use_db_class:
 
-                    if not training['class'] == 'functional':
+                    if not training['class'] == 'functional' and not cp2:
                         training['class'] = 'nonfunctional'
                     if not i % 10 == 0:
                         self.training_data.append(training)
@@ -123,6 +124,9 @@ class Classifier:
         for pattern in self.training_data:
             # tokenize each word in the sentence
             w = nltk.word_tokenize(pattern['sentence'])
+
+            w = self.filter_words(w)
+
             # add to our words list
             self.words.extend(w)
             # add to documents in our corpus
@@ -132,12 +136,26 @@ class Classifier:
                 self.classes.append(pattern['class'])
 
         # remove stop words, stem and lower each word and remove duplicates
-        self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in self.stopwords]
+        #self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in self.stopwords]
+
         self.words = list(set(self.words))
 
+        print(len(self.words))
         # remove duplicates
         self.classes = list(set(self.classes))
 
+    def filter_words(self, words):
+
+        # stem
+        words = [Classifier.STEMMER.stem(word.lower()) for word in words]
+
+        # remove stop words
+        words = [word for word in words if word not in self.stopwords]
+
+        # remove words with numbers
+        words = [word for word in words if not any(char.isdigit() for char in word)]
+
+        return words
 
     def create_training_data(self):
         """
@@ -155,8 +173,10 @@ class Classifier:
             # list of tokenized words for the pattern
             pattern_words = doc[0]
 
+            pattern_words = self.filter_words(pattern_words)
+
             # stem each word
-            pattern_words = [Classifier.STEMMER.stem(w.lower()) for w in pattern_words if w not in self.stopwords]
+            #pattern_words = [Classifier.STEMMER.stem(w.lower()) for w in pattern_words if w not in self.stopwords]
 
             # create our bag of words array
             for w in self.words:
@@ -320,12 +340,13 @@ class Classifier:
 
         percent_correct = (number_correct / len(self.test_data)) * 100
 
-        print('Out of %i tests, %i passed. %f percent of tests passed' % (len(self.test_data), number_correct, percent_correct))
+        print('%f percent of tests passed. Out of %i tests, %i passed. ' % (percent_correct, len(self.test_data), number_correct))
         if couldnt_classify > 0:
             print('Couldnt classify %i tests' % couldnt_classify)
+        return percent_correct
 
-    @staticmethod
-    def clean_up_sentence(sentence):
+
+    def clean_up_sentence(self, sentence):
         """
         clean up input sentence
         :param sentence: input sentence
@@ -334,8 +355,9 @@ class Classifier:
 
         # tokenize the pattern
         sentence_words = nltk.word_tokenize(sentence)
+        sentence_words = self.filter_words(sentence_words)
         # stem each word
-        sentence_words = [Classifier.STEMMER.stem(word.lower()) for word in sentence_words]
+        #sentence_words = [Classifier.STEMMER.stem(word.lower()) for word in sentence_words if word not in self.stopwords]
         return sentence_words
 
     @staticmethod

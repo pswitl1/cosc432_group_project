@@ -16,11 +16,13 @@ def main():
                         default='')
     parser.add_argument('--quiet', '-q', help='surpress logging', action='store_true')
     parser.add_argument('--hidden-neurons', help='number of hidden neurons in training', type=int, default=7)
-    parser.add_argument('--alpha', help='alpha in training', type=float, default=.07)
-    parser.add_argument('--epoch', help='number of epochs in training', type=int, default=1000)
+    parser.add_argument('--alpha', help='alpha in training', type=float, default=.09)
+    parser.add_argument('--epoch', help='number of epochs in training', type=int, default=1500)
     parser.add_argument('--dropout', help='dropout boolean for training', action='store_true')
     parser.add_argument('--dropout-percent', help='dropout boolean for training', type=float, default=0.1)
     parser.add_argument('--disable-stopwords', help='dont use stopwords', action='store_true')
+    parser.add_argument('--cp2', help='run classifier for cp2, which classifies based on all classes', action='store_true')
+    parser.add_argument('--use-db-class', help='include database sentences', action='store_true')
 
 
     args = parser.parse_args()
@@ -34,15 +36,13 @@ def main():
                             epochs=args.epoch,
                             dropout=args.dropout,
                             dropout_percent=args.dropout_percent,
-                            disable_stopwords=args.disable_stopwords)
+                            disable_stopwords=args.disable_stopwords,
+                            cp2=args.cp2,
+                            use_db_class=args.use_db_class)
 
-    # try to classify some test sentences
-    classifier.classify("Users information must be kept private.")
-    classifier.classify("The Application should have a modern look.")
-    classifier.classify("The Application should have circular buttons.")
-    classifier.classify("The application must run fast and smoothly.")
-    classifier.classify("The users information must be linked to an emergency contact.")
-    classifier.classify("This will present you with a list of all of the contacts currently contained in your Address Book.")
+    percent_correct = classifier.classify_test_data()
+
+    return percent_correct
 
 
 if __name__ == '__main__':
