@@ -104,7 +104,8 @@ celerybeat-schedule
 .mypy_cache/
 
 # ignore synapses
-synapses.json
+synapses*
+output*
 
 #ignore idea
 .idea*

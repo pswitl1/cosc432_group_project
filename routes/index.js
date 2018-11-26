@@ -14,7 +14,7 @@ router.get('/show', function(req, res, next) {
     mode: 'text',
     pythonOptions: ['-u'], // get print results in real-time
     scriptPath: './',
-    args: ['training_data_input_file.txt']
+    args: ['training_data_input_file.txt', '--dropout', '--use-stopwords']
   };
 
   PythonShell.run('main.py', options, function (err, results) {

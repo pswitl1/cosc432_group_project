@@ -21,7 +21,7 @@ class Classifier:
     """
 
     # static variables
-    ERROR_THRESHOLD = 0.5
+    ERROR_THRESHOLD = 0.4
     STEMMER = LancasterStemmer()
 
     # add more stop words
@@ -30,7 +30,7 @@ class Classifier:
         'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are']
     STOP_WORDS.extend(CUSTOM_STOP_WORDS)
 
-    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, disable_stopwords, cp2, use_db_class):
+    def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, use_stopwords, cp2, use_db_class):
         """
         Using input file, determine training data and train neural net
         :param input_file: file path to input file
@@ -47,7 +47,9 @@ class Classifier:
         self.synapse_file = synapse_file
 
         # stem stopwords
-        self.stopwords = [Classifier.STEMMER.stem(w.lower()) for w in Classifier.STOP_WORDS]
+        self.stopwords = []
+        if use_stopwords:
+            self.stopwords = [Classifier.STEMMER.stem(w.lower()) for w in Classifier.STOP_WORDS]
 
         # verify input file is valid
         if os.path.exists(input_file):
@@ -227,7 +229,7 @@ class Classifier:
 
             # how much did we miss the target value?
             layer_2_error = y - layer_2
-            if (j % 10 == 0):
+            if (j % 50 == 0):
                 print("delta after " + str(j) + " iterations:" + str(np.mean(np.abs(layer_2_error))))
             if (j % 10000) == 0 and j > 5000:
                 # if this 10k iteration's error is greater than the last iteration, break out
@@ -318,22 +320,27 @@ class Classifier:
         """
         classify the test data
         """
+        print('Classifing test data...')
         number_correct = 0
         couldnt_classify = 0
+        certainty = 0.0
         for idx, test in enumerate(self.test_data):
             results = self.classify(test['sentence'])
             if results == []:
                 couldnt_classify += 1
-                print('Test %i result: Couldnt classify.' % idx)
+                #print('Test %i result: Couldnt classify.' % idx)
             else:
                 correct = results[0][0] == test['class']
-                print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
+                #print('Test %i result: %s, certainty %f' % (idx, correct, results[0][1]))
                 if correct:
+                    certainty += results[0][1]
                     number_correct += 1
 
         percent_correct = (number_correct / len(self.test_data)) * 100
 
         print('%f percent of tests passed. Out of %i tests, %i passed. ' % (percent_correct, len(self.test_data), number_correct))
+        print('Average certainty of passed tests: %f' % (certainty / number_correct))
+
         if couldnt_classify > 0:
             print('Couldnt classify %i tests' % couldnt_classify)
         return percent_correct

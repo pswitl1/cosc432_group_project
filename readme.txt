@@ -1,3 +1,4 @@
-source env/bin/activate
+USAGE:
 
-./main.py training_data_input_file.txt
+	source env/bin/activate
+	./main.py training_data_input_file.txt --use-stopwords
