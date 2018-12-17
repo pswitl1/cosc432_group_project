@@ -6,6 +6,7 @@ import datetime
 import numpy as np
 
 # neural net library
+import random
 import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -27,7 +28,8 @@ class Classifier:
     # add more stop words
     STOP_WORDS = stopwords.words('english')
     CUSTOM_STOP_WORDS = ['the', 'system', 'shall', 'product', 'interface', 'note', 'provides', 'has', 'capability',
-        'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are']
+        'allows', 'implement', 'all', 'covered', 'entity', 'when', 'you', 'are', 'us', 'inform', 'heal', 'dat', 'paty',
+        'protect', 'disclos','access', 'may', 'auth', 'individ', 'abl', 'requir']
     STOP_WORDS.extend(CUSTOM_STOP_WORDS)
 
     def __init__(self, input_file, synapse_file, hidden_neurons, alpha, epochs, dropout, dropout_percent, use_stopwords, cp2, use_db_class):
@@ -78,15 +80,15 @@ class Classifier:
         print('first training output: %s\n' % self.output[0])
 
         # train and time training
-        if synapse_file == '':
-            start_time = time.time()
-            self.train(hidden_neurons=hidden_neurons,
-                       alpha=alpha,
-                       epochs=epochs,
-                       dropout=dropout,
-                       dropout_percent=dropout_percent)
-            elapsed_time = time.time() - start_time
-            print("processing time: %s seconds" % elapsed_time)
+        #if synapse_file == '':
+        start_time = time.time()
+        self.train(hidden_neurons=hidden_neurons,
+                   alpha=alpha,
+                   epochs=epochs,
+                   dropout=dropout,
+                   dropout_percent=dropout_percent)
+        elapsed_time = time.time() - start_time
+        print("processing time: %s seconds" % elapsed_time)
 
         # load our calculated synapse values
         with open(self.synapse_file) as data_file:
@@ -99,20 +101,32 @@ class Classifier:
         parse the training data input file to set training data
         :param input_file: training data input file
         """
+
+        classes_to_keep = ['access control',
+                           'audit',
+                           'maintainability',
+                           'operational',
+                           'privacy',
+                           'security',
+                           'usability']
         with open(input_file, 'r') as fin:
             i = 1
             for line in fin.readlines():
                 line = line[line.index('{'):line.rindex('}')+1]
                 training = json.loads(line)
-                if not (training['class'] == 'database design' or training['class'] == 'database') or use_db_class:
-
-                    if not training['class'] == 'functional' and not cp2:
-                        training['class'] = 'nonfunctional'
-                    if not i % 10 == 0:
+                if training['class'] in classes_to_keep:
+                    if not i % 7 == 0:
                         self.training_data.append(training)
                     else:
                         self.test_data.append(training)
                     i += 1
+
+        #random.shuffle(self.training_data)
+
+        #length = int(len(self.training_data) * .2)
+        #for idx, data in enumerate(self.training_data):
+        #    self.test_data.append(data)
+        #    self.training_data.remove(data)
 
     def set_words_classes_documents(self):
         """
@@ -120,10 +134,10 @@ class Classifier:
         """
 
         # loop through each sentence in our training data
+        classes_counting = []
         for pattern in self.training_data:
             # tokenize each word in the sentence
             w = nltk.word_tokenize(pattern['sentence'])
-
             w = self.filter_words(w)
 
             # add to our words list
@@ -133,13 +147,36 @@ class Classifier:
             # add to our classes list
             if pattern['class'] not in self.classes:
                 self.classes.append(pattern['class'])
+                classes_counting.append({'class': pattern['class'], 'counter': 0})
+            else:
+                for c in classes_counting:
+                    if c['class'] == pattern['class']:
+                        c['counter'] += 1
 
+        ws = []
+        word_dict = {}
+        for w in self.words:
+            if w in ws:
+                word_dict[w] += 1
+            else:
+                ws.append(w)
+                word_dict[w] = 0
+
+        import operator
+        sorted_x = sorted(word_dict.items(), key=operator.itemgetter(1))
+        #for w in sorted_x:
+        #    print(w)
+        #sys.exit()
         # remove stop words, stem and lower each word and remove duplicates
-        #self.words = [Classifier.STEMMER.stem(w.lower()) for w in self.words if w not in self.stopwords]
         self.words = list(set(self.words))
 
         # remove duplicates
         self.classes = list(set(self.classes))
+
+        for c in classes_counting:
+            percent = c['counter'] / len(self.training_data) * 100
+            print('Class: %s, number of sentences: %i, percentage of dataset: %f%%' % (c['class'], c['counter'], percent))
+        #sys.exit()
 
     def filter_words(self, words):
 
@@ -149,8 +186,8 @@ class Classifier:
         # remove stop words
         words = [word for word in words if word not in self.stopwords]
 
-        # remove words with numbers
-        words = [word for word in words if not any(char.isdigit() for char in word)]
+        # remove words that contain anything but alphabet chars
+        words = [word for word in words if not any(not (char.isalpha() or char.isnumeric()) for char in word)]
 
         return words
 
@@ -339,7 +376,8 @@ class Classifier:
         percent_correct = (number_correct / len(self.test_data)) * 100
 
         print('%f percent of tests passed. Out of %i tests, %i passed. ' % (percent_correct, len(self.test_data), number_correct))
-        print('Average certainty of passed tests: %f' % (certainty / number_correct))
+        if number_correct > 0:
+            print('Average certainty of passed tests: %f' % (certainty / number_correct))
 
         if couldnt_classify > 0:
             print('Couldnt classify %i tests' % couldnt_classify)
